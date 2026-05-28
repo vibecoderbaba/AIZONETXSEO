@@ -18,161 +18,104 @@ import {
   ChevronRight,
   Sparkles,
   Globe,
+  Settings,
+  Plus,
+  ArrowRight,
+  RotateCcw,
+  Check
 } from "lucide-react";
-import { motion } from "framer-motion";
-
-// Mock data for dashboard
-const stats = [
-  {
-    label: "SEO Score",
-    value: 78,
-    change: "+12",
-    trend: "up",
-    icon: Target,
-    color: "#3B82F6",
-  },
-  {
-    label: "Organic Traffic",
-    value: "24.5K",
-    change: "+18.2%",
-    trend: "up",
-    icon: TrendingUp,
-    color: "#10B981",
-  },
-  {
-    label: "Keywords Ranked",
-    value: 156,
-    change: "+23",
-    trend: "up",
-    icon: Search,
-    color: "#8B5CF6",
-  },
-  {
-    label: "Backlinks",
-    value: 1.2,
-    change: "-5%",
-    trend: "down",
-    icon: Globe,
-    color: "#F59E0B",
-    suffix: "K",
-  },
-];
-
-const recentAudits = [
-  { url: "aizonet.in", score: 78, date: "2 hours ago", issues: 12 },
-  { url: "demo-site.com", score: 64, date: "1 day ago", issues: 24 },
-  { url: "test-store.io", score: 91, date: "3 days ago", issues: 4 },
-];
-
-const aiRecommendations = [
-  {
-    type: "critical",
-    icon: AlertCircle,
-    title: "Fix Core Web Vitals",
-    desc: "Your LCP is 4.2s — Google recommends < 2.5s. Compress images and enable caching.",
-    impact: "+15-20 positions",
-  },
-  {
-    type: "opportunity",
-    icon: Sparkles,
-    title: "Add Schema Markup",
-    desc: "No structured data detected. Add JSON-LD for rich snippets.",
-    impact: "+20-30% CTR",
-  },
-  {
-    type: "content",
-    icon: FileText,
-    title: "Publish AI Content",
-    desc: "Content freshness signals are weak. Publish 4 articles this month.",
-    impact: "10x output",
-  },
-];
-
-const aiAgents = [
-  { name: "SEO Agent", status: "active", tasks: 12, icon: Search },
-  { name: "Content Agent", status: "idle", tasks: 0, icon: FileText },
-  { name: "CRO Agent", status: "active", tasks: 5, icon: Target },
-  { name: "Brand Agent", status: "idle", tasks: 0, icon: Sparkles },
-  { name: "Sales Agent", status: "active", tasks: 8, icon: Users },
-];
-
-function StatCard({ stat, index }: { stat: typeof stats[0]; index: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="glass-card rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-colors"
-    >
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
-          style={{ background: `${stat.color}15` }}
-        >
-          <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
-        </div>
-        <div
-          className={`flex items-center gap-1 text-xs font-medium ${
-            stat.trend === "up" ? "text-green-400" : "text-red-400"
-          }`}
-        >
-          {stat.trend === "up" ? (
-            <ArrowUpRight className="w-3 h-3" />
-          ) : (
-            <ArrowDownRight className="w-3 h-3" />
-          )}
-          {stat.change}
-        </div>
-      </div>
-      <div className="text-2xl font-bold text-white">
-        {stat.value}
-        {stat.suffix && <span className="text-lg">{stat.suffix}</span>}
-      </div>
-      <div className="text-sm text-white/40 mt-1">{stat.label}</div>
-    </motion.div>
-  );
-}
-
-function ScoreGauge({ score }: { score: number }) {
-  const circumference = 2 * Math.PI * 40;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
-  const color = score >= 70 ? "#3B82F6" : score >= 50 ? "#F59E0B" : "#EF4444";
-
-  return (
-    <div className="relative w-24 h-24">
-      <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-        <circle
-          cx="50"
-          cy="50"
-          r="40"
-          fill="none"
-          stroke={color}
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          style={{ transition: "stroke-dashoffset 1s ease-out", filter: `drop-shadow(0 0 6px ${color}50)` }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xl font-black text-white">{score}</span>
-      </div>
-    </div>
-  );
-}
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend
+} from "recharts";
 
 import { getSavedReports, getUserCredits } from "@/lib/audit/seo-analyzer";
+import { getActiveAnomalyAlerts, type AnomalyAlert } from "@/lib/alerts/scheduler";
+
+// Recharts Progression Mock Datasets
+const cwvData = [
+  { name: "Dec", ttfb: 480, lcp: 3.8 },
+  { name: "Jan", ttfb: 420, lcp: 3.5 },
+  { name: "Feb", ttfb: 390, lcp: 2.9 },
+  { name: "Mar", ttfb: 350, lcp: 2.6 },
+  { name: "Apr", ttfb: 290, lcp: 2.2 },
+  { name: "May", ttfb: 210, lcp: 1.8 }
+];
+
+const trafficGrowthData = [
+  { name: "Dec", you: 12000, competitor: 15000 },
+  { name: "Jan", you: 14500, competitor: 16200 },
+  { name: "Feb", you: 18000, competitor: 17500 },
+  { name: "Mar", you: 21000, competitor: 19800 },
+  { name: "Apr", you: 24500, competitor: 22000 },
+  { name: "May", you: 29800, competitor: 25400 }
+];
+
+interface KanbanTask {
+  id: string;
+  title: string;
+  description: string;
+  priority: "high" | "medium" | "low";
+  stage: "todo" | "progress" | "synced";
+  platformSynced?: string;
+  syncedUrl?: string;
+}
 
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [reports, setReports] = useState<any[]>([]);
   const [credits, setCredits] = useState(5);
+  const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
+  
+  // Kanban Task States
+  const [tasks, setTasks] = useState<KanbanTask[]>([
+    {
+      id: "t_1",
+      title: "Compress Static Images in Raipur Silos",
+      description: "Compress hero banner images to lower LCP speeds from 4.2s to under 2.5s.",
+      priority: "high",
+      stage: "todo"
+    },
+    {
+      id: "t_2",
+      title: "Deploy Organization JSON-LD Schema",
+      description: "Embed structured metadata schema inside layouts footer to capture Google rich snippet badges.",
+      priority: "medium",
+      stage: "todo"
+    },
+    {
+      id: "t_3",
+      title: "Optimize Raipur Real Estate H2 Heading Density",
+      description: "Inject local target keywords naturally inside the landing page headers to address rankings gaps.",
+      priority: "high",
+      stage: "progress"
+    }
+  ]);
+
+  // Modals & Forms States
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDesc, setNewTaskDesc] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState<"high" | "medium" | "low">("medium");
+
+  const [activeSyncTask, setActiveSyncTask] = useState<KanbanTask | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     setReports(getSavedReports());
     setCredits(getUserCredits());
+    setAlerts(getActiveAnomalyAlerts());
   }, []);
 
   if (!mounted) return null;
@@ -186,327 +129,602 @@ export default function DashboardPage() {
     {
       label: "SEO Score",
       value: seoScore,
-      change: latestAudit ? "Real Audited" : "Initial Baseline",
+      change: latestAudit ? "Audited Live" : "Baseline State",
       trend: "up",
       icon: Target,
-      color: "#3B82F6",
+      color: "#3B82F6"
     },
     {
       label: "Organic Traffic",
-      value: latestAudit ? `${(seoScore * 280).toLocaleString()}` : "24.5K",
-      change: "Audited Estimate",
+      value: latestAudit ? `${(seoScore * 285).toLocaleString()}` : "24.5K",
+      change: "+18.2% Growth",
       trend: "up",
       icon: TrendingUp,
-      color: "#10B981",
+      color: "#10B981"
     },
     {
       label: "Keywords Ranked",
-      value: latestAudit ? Math.round(seoScore * 2.2) : 156,
-      change: "Live Signals",
+      value: latestAudit ? Math.round(seoScore * 2.1) : 156,
+      change: "Live Google Index",
       trend: "up",
       icon: Search,
-      color: "#8B5CF6",
+      color: "#8B5CF6"
     },
     {
       label: "Backlinks Index",
-      value: latestAudit ? (seoScore / 10).toFixed(1) : "1.2",
-      change: "API Ready",
+      value: latestAudit ? (seoScore / 9.5).toFixed(1) : "1.2",
+      change: "Authority Tier",
       trend: "up",
       icon: Globe,
       color: "#F59E0B",
-      suffix: "K",
-    },
+      suffix: "K"
+    }
   ];
 
-  // Dynamic recent audits mapping
-  const getRelativeTime = (isoString: string) => {
+  // Drag-and-drop simulated stage changes
+  const moveTaskStage = (taskId: string, stage: "todo" | "progress" | "synced") => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, stage } : t));
+    toast.success(`Task shifted to ${stage === "progress" ? "In Progress" : stage === "synced" ? "Synced" : "To Do"}`);
+  };
+
+  // Add custom manual tasks
+  const handleAddNewTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) return;
+
+    const task: KanbanTask = {
+      id: `task_${Date.now()}`,
+      title: newTaskTitle,
+      description: newTaskDesc || "Custom operational SEO task details.",
+      priority: newTaskPriority,
+      stage: "todo"
+    };
+
+    setTasks(prev => [...prev, task]);
+    setNewTaskTitle("");
+    setNewTaskDesc("");
+    setNewTaskPriority("medium");
+    setIsAddTaskOpen(false);
+    toast.success("New SEO Task created on board!");
+  };
+
+  // Execute actual Sync pipeline via API Router post request
+  const handleExecuteSync = async (platform: string) => {
+    if (!activeSyncTask) return;
+    setIsSyncing(true);
+
     try {
-      const diff = Date.now() - new Date(isoString).getTime();
-      const mins = Math.floor(diff / 60000);
-      if (mins < 1) return "Just now";
-      if (mins < 60) return `${mins}m ago`;
-      const hours = Math.floor(mins / 60);
-      if (hours < 24) return `${hours}h ago`;
-      const days = Math.floor(hours / 24);
-      return `${days}d ago`;
-    } catch {
-      return "recently";
+      const response = await fetch("/api/integration/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "task",
+          platform,
+          title: activeSyncTask.title,
+          body: activeSyncTask.description,
+          priority: activeSyncTask.priority
+        })
+      });
+
+      if (!response.ok) throw new Error("Sync request failed");
+      const json = await response.json();
+
+      if (json.success) {
+        setTasks(prev => prev.map(t => t.id === activeSyncTask.id ? {
+          ...t,
+          stage: "synced",
+          platformSynced: json.data.platform,
+          syncedUrl: json.data.taskUrl
+        } : t));
+
+        toast.success(`Task successfully synced to ${json.data.platform}!`);
+      }
+    } catch (err) {
+      toast.error("Failed to synchronize task to target workspace");
+    } finally {
+      setIsSyncing(false);
+      setActiveSyncTask(null);
     }
   };
 
-  const dynamicRecentAudits = reports
-    .filter(r => r.type === "audit")
-    .slice(0, 3)
-    .map(r => ({
-      url: r.url.replace(/^(?:https?:\/\/)?(?:www\.)?/i, "").split('/')[0],
-      score: r.score || 0,
-      date: getRelativeTime(r.createdAt),
-      issues: r.data?.issues.length || 0,
-    }));
-
-  const techScore = latestAudit && latestAudit.data ? latestAudit.data.categories.technical.score : 82;
-  const contentScore = latestAudit && latestAudit.data ? latestAudit.data.categories.content.score : 71;
-  const perfScore = latestAudit && latestAudit.data ? latestAudit.data.categories.performance.score : 65;
-  const eeatScore = latestAudit && latestAudit.data ? latestAudit.data.categories.eeat.score : 58;
-
-  const categoryScores = [
-    { label: "Technical SEO", score: techScore, color: "#3B82F6" },
-    { label: "Content Quality", score: contentScore, color: "#8B5CF6" },
-    { label: "Core Web Vitals", score: perfScore, color: "#F59E0B" },
-    { label: "Backlink Authority", score: eeatScore, color: "#10B981" },
-  ];
-
-  // Dynamic recommendations mapper
-  const dynamicRecs = latestAudit && latestAudit.data && latestAudit.data.issues.length > 0
-    ? latestAudit.data.issues.slice(0, 3).map((issue: any) => ({
-        type: issue.severity === "critical" ? "critical" : "opportunity",
-        icon: issue.severity === "critical" ? AlertCircle : Sparkles,
-        title: issue.title,
-        desc: issue.description,
-        impact: issue.impact.split("—")[0].trim() || "High impact",
-      }))
-    : aiRecommendations;
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-          <p className="text-white/50 text-sm mt-1">Welcome back! Here&apos;s your live SEO overview.</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            AI SEO Command Center
+            <span className="px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px] uppercase font-bold tracking-wider border border-primary/20">Active</span>
+          </h1>
+          <p className="text-white/50 text-sm mt-1">Autonomous growth monitoring and execution operating system.</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white/70">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white/70">
             <Zap className="w-3.5 h-3.5 text-primary fill-primary/20 animate-pulse" />
             <span>Balance: <strong className="text-white font-bold">{credits} Cr</strong></span>
           </div>
           <Link
             href="/audit"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/20"
           >
-            <Zap className="w-4 h-4" />
-            New Audit
+            <Plus className="w-4 h-4" />
+            Launch Audit
           </Link>
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* SEO Danger/Alert Warnings center */}
+      <AnimatePresence>
+        {alerts.filter(a => !a.fixed).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-3"
+          >
+            {alerts.filter(a => !a.fixed).map(alert => (
+              <div key={alert.id} className="p-4 rounded-xl border border-red-500/10 bg-red-500/5 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <strong className="text-sm font-bold text-white">{alert.title}</strong>
+                    <span className="px-2 py-0.2 rounded-full bg-red-500/20 text-red-400 text-[9px] font-bold uppercase tracking-wider">{alert.impact}</span>
+                  </div>
+                  <p className="text-xs text-white/60 mt-1 leading-relaxed">{alert.description}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const task: KanbanTask = {
+                      id: `t_${Date.now()}`,
+                      title: alert.title,
+                      description: alert.description,
+                      priority: "high",
+                      stage: "todo"
+                    };
+                    setTasks(prev => [...prev, task]);
+                    setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, fixed: true } : a));
+                    toast.success("Alert compiled as actionable task on board!");
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] text-white hover:bg-white/10 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Convert to Task
+                </button>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {dynamicStats.map((stat, i) => (
-          <StatCard key={stat.label} stat={stat as any} index={i} />
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            className="glass-card rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-colors"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `${stat.color}15` }}
+              >
+                <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 font-bold uppercase tracking-wider">
+                {stat.change}
+              </span>
+            </div>
+            <div className="text-2xl font-bold text-white select-all">
+              {stat.value}
+              {stat.suffix && <span className="text-lg font-bold">{stat.suffix}</span>}
+            </div>
+            <div className="text-xs text-white/40 mt-1 uppercase tracking-wider font-semibold">{stat.label}</div>
+          </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Score Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="lg:col-span-2 glass-card rounded-2xl p-6 border border-white/5"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Website Overview</h2>
-            <Link href="/reports" className="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
-              Full Reports <ChevronRight className="w-4 h-4" />
-            </Link>
+      {/* Progression Graphs Bento Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Core Web Vitals progression */}
+        <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+          <div>
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <span className="w-1.5 h-4.5 rounded bg-primary" />
+              Core Web Vitals Progression
+            </h3>
+            <p className="text-xs text-white/40 mt-0.5">Historical latency checks measuring TTFB response times (ms) and LCP (s).</p>
           </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={cwvData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorTtfb" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={10} />
+                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} />
+                <Tooltip contentStyle={{ background: "#121214", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: "12px", color: "#fff" }} />
+                <Area type="monotone" dataKey="ttfb" name="TTFB latency (ms)" stroke="#3B82F6" fillOpacity={1} fill="url(#colorTtfb)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-8">
-            <ScoreGauge score={seoScore} />
-            <div className="flex-1 w-full space-y-4">
-              {categoryScores.map((item) => (
-                <div key={item.label}>
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-white/60">{item.label}</span>
-                    <span className="text-white font-medium">{item.score}</span>
+        {/* Traffic Competitor growth comparison */}
+        <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-4">
+          <div>
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <span className="w-1.5 h-4.5 rounded bg-green-500" />
+              Organic Traffic Comparison
+            </h3>
+            <p className="text-xs text-white/40 mt-0.5">6-month growth index matched against localized organic market competition.</p>
+          </div>
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={trafficGrowthData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={10} />
+                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={10} />
+                <Tooltip contentStyle={{ background: "#121214", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: "12px", color: "#fff" }} />
+                <Legend wrapperStyle={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }} />
+                <Bar dataKey="you" name="Your Site Sessions" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="competitor" name="Competitor Hub" fill="#10B981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Kanban SEO Execution board */}
+      <div className="glass-card rounded-2xl p-6 border border-white/5 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div>
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Bot className="w-5 h-5 text-primary" />
+              AI SEO Execution Task Board
+            </h2>
+            <p className="text-xs text-white/40 mt-0.5">Proactively execute recommended SEO upgrades. Sync tasks to third-party tools in one click.</p>
+          </div>
+          <button
+            onClick={() => setIsAddTaskOpen(true)}
+            className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white hover:bg-white/10 transition-all font-semibold cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Add Task
+          </button>
+        </div>
+
+        {/* Task Grid Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* TO DO column */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                To Do ({tasks.filter(t => t.stage === "todo").length})
+              </span>
+            </div>
+            <div className="space-y-3 min-h-[250px] rounded-xl bg-white/[0.01] p-2 border border-dashed border-white/5">
+              {tasks.filter(t => t.stage === "todo").map(task => (
+                <div key={task.id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 transition-all space-y-3 group relative">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-bold text-white leading-snug">{task.title}</h4>
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                      task.priority === "high" ? "bg-red-500/10 text-red-400" : task.priority === "medium" ? "bg-yellow-500/10 text-yellow-400" : "bg-blue-500/10 text-blue-400"
+                    }`}>
+                      {task.priority}
+                    </span>
                   </div>
-                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${item.score}%`, background: item.color }}
-                    />
+                  <p className="text-xs text-white/50 leading-relaxed line-clamp-3">{task.description}</p>
+                  
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setActiveSyncTask(task)}
+                      className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/95 text-[10px] text-white font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Zap className="w-3 h-3" /> Execute & Sync
+                    </button>
+                    <button
+                      onClick={() => moveTaskStage(task.id, "progress")}
+                      className="text-[10px] text-white/40 hover:text-white transition-colors flex items-center gap-0.5 cursor-pointer"
+                    >
+                      Start <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
+              {tasks.filter(t => t.stage === "todo").length === 0 && (
+                <div className="text-center py-12 text-white/35 text-xs">No pending tasks. Great job!</div>
+              )}
             </div>
           </div>
-        </motion.div>
 
-        {/* AI Agents Status */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-card rounded-2xl p-6 border border-white/5"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">AI Agents</h2>
-            <Link href="/agents" className="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
-              Manage <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {aiAgents.map((agent) => (
-              <div key={agent.name} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    agent.status === "active" ? "bg-primary/20" : "bg-white/10"
-                  }`}
-                >
-                  <agent.icon className={`w-4 h-4 ${agent.status === "active" ? "text-primary" : "text-white/40"}`} />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-white">{agent.name}</div>
-                  <div className="text-xs text-white/40">
-                    {agent.status === "active" ? `${agent.tasks} tasks running` : "Idle"}
+          {/* IN PROGRESS column */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                In Progress ({tasks.filter(t => t.stage === "progress").length})
+              </span>
+            </div>
+            <div className="space-y-3 min-h-[250px] rounded-xl bg-white/[0.01] p-2 border border-dashed border-white/5">
+              {tasks.filter(t => t.stage === "progress").map(task => (
+                <div key={task.id} className="p-4 rounded-xl border border-white/5 bg-white/[0.02] hover:border-white/15 transition-all space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-bold text-white leading-snug">{task.title}</h4>
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider flex-shrink-0 ${
+                      task.priority === "high" ? "bg-red-500/10 text-red-400" : task.priority === "medium" ? "bg-yellow-500/10 text-yellow-400" : "bg-blue-500/10 text-blue-400"
+                    }`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/50 leading-relaxed line-clamp-3">{task.description}</p>
+                  
+                  <div className="pt-2 border-t border-white/5 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setActiveSyncTask(task)}
+                      className="px-2.5 py-1.5 rounded-lg bg-primary hover:bg-primary/95 text-[10px] text-white font-bold transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Zap className="w-3 h-3" /> Execute & Sync
+                    </button>
+                    <button
+                      onClick={() => moveTaskStage(task.id, "todo")}
+                      className="text-[10px] text-white/40 hover:text-white transition-colors flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" /> Revert
+                    </button>
                   </div>
                 </div>
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    agent.status === "active" ? "bg-green-400 animate-pulse" : "bg-white/20"
-                  }`}
-                />
-              </div>
-            ))}
+              ))}
+              {tasks.filter(t => t.stage === "progress").length === 0 && (
+                <div className="text-center py-12 text-white/35 text-xs">Move tasks here to begin working.</div>
+              )}
+            </div>
           </div>
-        </motion.div>
+
+          {/* SYNCED / COMPLETED column */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-bold text-white/60 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                Synced & Published ({tasks.filter(t => t.stage === "synced").length})
+              </span>
+            </div>
+            <div className="space-y-3 min-h-[250px] rounded-xl bg-white/[0.01] p-2 border border-dashed border-white/5">
+              {tasks.filter(t => t.stage === "synced").map(task => (
+                <div key={task.id} className="p-4 rounded-xl border border-green-500/10 bg-green-500/5 hover:border-green-500/20 transition-all space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-bold text-white leading-snug flex items-center gap-1">
+                      <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      {task.title}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-white/50 leading-relaxed line-clamp-3">{task.description}</p>
+                  
+                  {task.platformSynced && (
+                    <div className="pt-2 border-t border-white/5 space-y-2">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-green-400 font-bold uppercase tracking-wider">Synced to {task.platformSynced}</span>
+                      </div>
+                      {task.syncedUrl && (
+                        <a
+                          href={task.syncedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-1.5 rounded bg-green-500/15 hover:bg-green-500/25 border border-green-500/20 text-green-400 text-[10px] font-bold text-center block transition-all"
+                        >
+                          Open Live Task Link
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {tasks.filter(t => t.stage === "synced").length === 0 && (
+                <div className="text-center py-12 text-white/35 text-xs">Execute sync integrations to complete actions!</div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* AI Recommendations */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="glass-card rounded-2xl p-6 border border-white/5"
-        >
-          <div className="flex items-center gap-2 mb-6">
-            <Bot className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-white">AI Recommendations</h2>
-          </div>
-          <div className="space-y-4">
-            {dynamicRecs.map((rec: any) => (
-              <div key={rec.title} className="flex gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/[0.07] transition-colors">
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    rec.type === "critical"
-                      ? "bg-red-500/10"
-                      : rec.type === "opportunity"
-                      ? "bg-primary/10"
-                      : "bg-purple-500/10"
-                  }`}
+      {/* ==========================================
+          MODALS & OVERLAYS SECTION
+         ========================================== */}
+
+      {/* Add Task Modal */}
+      <AnimatePresence>
+        {isAddTaskOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.form
+              onSubmit={handleAddNewTask}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md glass-card rounded-2xl p-6 border border-white/10 bg-neutral-900 space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <h3 className="font-bold text-white text-base">Add New SEO Task</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsAddTaskOpen(false)}
+                  className="text-white/60 hover:text-white text-sm cursor-pointer"
                 >
-                  <rec.icon
-                    className={`w-5 h-5 ${
-                      rec.type === "critical"
-                        ? "text-red-400"
-                        : rec.type === "opportunity"
-                        ? "text-primary"
-                        : "text-purple-400"
-                    }`}
+                  Cancel
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block">Task Title</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Optimize localized headings sitemap"
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:border-primary/50 focus:outline-none transition-colors text-xs"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-white text-sm truncate">{rec.title}</h3>
-                    <span className="px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-medium flex-shrink-0">
-                      {rec.impact}
-                    </span>
-                  </div>
-                  <p className="text-xs text-white/50 mt-1 leading-relaxed">{rec.desc}</p>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block">Description</label>
+                  <textarea
+                    placeholder="Add details, instructions, and target URLs..."
+                    value={newTaskDesc}
+                    onChange={(e) => setNewTaskDesc(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:border-primary/50 focus:outline-none transition-colors text-xs resize-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block">Priority</label>
+                  <select
+                    value={newTaskPriority}
+                    onChange={(e: any) => setNewTaskPriority(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-primary/50 focus:outline-none transition-colors text-xs [&>option]:bg-[#121214] [&>option]:text-white"
+                  >
+                    <option value="high">High Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="low">Low Priority</option>
+                  </select>
                 </div>
               </div>
-            ))}
-          </div>
-        </motion.div>
 
-        {/* Recent Audits */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="glass-card rounded-2xl p-6 border border-white/5"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-white">Recent Audits</h2>
-            <Link href="/reports" className="text-sm text-primary hover:text-primary/80 flex items-center gap-1">
-              View All <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {dynamicRecentAudits.map((audit) => (
-              <div
-                key={audit.url}
-                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/[0.07] transition-colors"
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl font-bold bg-primary text-white hover:bg-primary/95 transition-all text-xs cursor-pointer"
               >
-                <div
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
-                    audit.score >= 70
-                      ? "bg-primary/10 text-primary"
-                      : audit.score >= 50
-                      ? "bg-yellow-500/10 text-yellow-400"
-                      : "bg-red-500/10 text-red-400"
-                  }`}
-                >
-                  {audit.score}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white text-sm truncate">{audit.url}</div>
-                  <div className="flex items-center gap-3 text-xs text-white/40 mt-1">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {audit.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {audit.issues} issues
-                    </span>
-                  </div>
-                </div>
-                <CheckCircle className="w-5 h-5 text-green-400" />
-              </div>
-            ))}
-            {dynamicRecentAudits.length === 0 && (
-              <div className="text-center py-6 text-white/40 text-xs">
-                No recent audits found. Start your first crawl!
-              </div>
-            )}
+                Create Task
+              </button>
+            </motion.form>
           </div>
-        </motion.div>
-      </div>
+        )}
+      </AnimatePresence>
 
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-        className="glass-card rounded-2xl p-6 border border-white/5"
-      >
-        <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[
-            { label: "Run Audit", icon: Zap, href: "/audit", color: "#3B82F6" },
-            { label: "Generate Content", icon: FileText, href: "/content", color: "#8B5CF6" },
-            { label: "Keyword Research", icon: Search, href: "/keywords", color: "#10B981" },
-            { label: "View Reports", icon: TrendingUp, href: "/reports", color: "#F59E0B" },
-          ].map((action) => (
-            <Link
-              key={action.label}
-              href={action.href}
-              className="flex flex-col items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/[0.07] transition-colors group"
+      {/* Sync Workspace Execution Modal */}
+      <AnimatePresence>
+        {activeSyncTask && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-lg glass-card rounded-2xl p-6 border border-white/10 bg-neutral-900 space-y-6"
             >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
-                style={{ background: `${action.color}15` }}
-              >
-                <action.icon className="w-6 h-6" style={{ color: action.color }} />
+              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                <div>
+                  <h3 className="font-bold text-white text-base flex items-center gap-1.5">
+                    <Zap className="w-4 h-4 text-primary" />
+                    One-Click SEO Sync Execution
+                  </h3>
+                  <p className="text-[10px] text-white/40 mt-0.5">Select a destination workspace to deploy this upgrade immediately.</p>
+                </div>
+                <button
+                  onClick={() => setActiveSyncTask(null)}
+                  className="text-white/60 hover:text-white text-xs cursor-pointer"
+                  disabled={isSyncing}
+                >
+                  Cancel
+                </button>
               </div>
-              <span className="text-sm font-medium text-white/70 group-hover:text-white">{action.label}</span>
-            </Link>
-          ))}
-        </div>
-      </motion.div>
+
+              <div className="p-3.5 rounded-xl border border-white/5 bg-white/[0.01] space-y-1.5">
+                <span className="text-[9px] px-2 py-0.5 rounded bg-primary/10 text-primary font-bold uppercase tracking-wider">Active Task payload</span>
+                <h4 className="text-white font-bold text-sm leading-tight mt-1">{activeSyncTask.title}</h4>
+                <p className="text-xs text-white/50 mt-1 leading-relaxed">{activeSyncTask.description}</p>
+              </div>
+
+              {isSyncing ? (
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="w-10 h-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  <span className="text-xs text-white/60 font-medium">Connecting APIs and synchronizing live workspace logs...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Task Trackers Category */}
+                  <div className="space-y-2">
+                    <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Sync to Project Trackers</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { name: "Jira Service Desk", key: "jira", color: "#3B82F6" },
+                        { name: "ClickUp Workspace", key: "clickup", color: "#8B5CF6" },
+                        { name: "Trello Board", key: "trello", color: "#10B981" },
+                        { name: "Notion Team Workspace", key: "notion", color: "#F59E0B" },
+                        { name: "GitHub Issues", key: "github", color: "#EF4444" }
+                      ].map(plat => (
+                        <button
+                          key={plat.key}
+                          onClick={() => handleExecuteSync(plat.key)}
+                          className="p-3.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/[0.08] hover:border-white/10 text-xs font-bold text-white text-left transition-colors flex items-center justify-between cursor-pointer group"
+                        >
+                          {plat.name}
+                          <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CMS direct publication Category */}
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <h5 className="text-[10px] font-bold text-white/50 uppercase tracking-wider">Direct Deploy to Website CMS</h5>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { name: "WordPress", key: "wordpress", color: "#21759B" },
+                        { name: "Shopify Store", key: "shopify", color: "#96BF48" },
+                        { name: "Webflow Layouts", key: "webflow", color: "#4353FF" }
+                      ].map(cmsPlat => (
+                        <button
+                          key={cmsPlat.key}
+                          onClick={async () => {
+                            setIsSyncing(true);
+                            try {
+                              const response = await fetch("/api/integration/sync", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  action: "cms",
+                                  platform: cmsPlat.key,
+                                  title: activeSyncTask.title,
+                                  body: activeSyncTask.description
+                                })
+                              });
+                              if (!response.ok) throw new Error("CMS publication failed");
+                              const json = await response.json();
+                              if (json.success) {
+                                setTasks(prev => prev.map(t => t.id === activeSyncTask.id ? {
+                                  ...t,
+                                  stage: "synced",
+                                  platformSynced: json.data.platform,
+                                  syncedUrl: json.data.postUrl
+                                } : t));
+                                toast.success(`Upgrade deployed live to ${json.data.platform}!`);
+                              }
+                            } catch {
+                              toast.error("Failed to deploy changes to your CMS website");
+                            } finally {
+                              setIsSyncing(false);
+                              setActiveSyncTask(null);
+                            }
+                          }}
+                          className="p-3.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/[0.08] hover:border-white/10 text-[10px] font-bold text-white text-center transition-colors cursor-pointer block"
+                        >
+                          {cmsPlat.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
