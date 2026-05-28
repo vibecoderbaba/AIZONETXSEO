@@ -42,9 +42,30 @@ export default function AgentsPage() {
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [histories, setHistories] = useState<Record<string, ChatMessage[]>>({});
   const [streamingContent, setStreamingContent] = useState("");
   const [activeTasks, setActiveTasks] = useState<AgentTask[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Isolate conversation history per agent when selectedAgent changes
+  useEffect(() => {
+    if (selectedAgent) {
+      setChatHistory(histories[selectedAgent.id] || []);
+    } else {
+      setChatHistory([]);
+    }
+    setStreamingContent("");
+  }, [selectedAgent, histories]);
+
+  const updateChatHistory = (updater: ChatMessage[] | ((prev: ChatMessage[]) => ChatMessage[])) => {
+    setChatHistory((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      if (selectedAgent) {
+        setHistories((h) => ({ ...h, [selectedAgent.id]: next }));
+      }
+      return next;
+    });
+  };
 
   // SEO Agent Form States
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -78,7 +99,7 @@ export default function AgentsPage() {
       timestamp: new Date().toISOString(),
     };
 
-    setChatHistory((prev) => [...prev, userMessage]);
+    updateChatHistory((prev) => [...prev, userMessage]);
     setInput("");
     setIsProcessing(true);
     setStreamingContent("");
@@ -97,7 +118,7 @@ export default function AgentsPage() {
         timestamp: new Date().toISOString(),
       };
 
-      setChatHistory((prev) => [...prev, agentMessage]);
+      updateChatHistory((prev) => [...prev, agentMessage]);
       setStreamingContent("");
 
       // Track the task
@@ -140,7 +161,7 @@ Please perform a complete, deep technical SEO audit and analysis for this websit
       timestamp: new Date().toISOString(),
     };
 
-    setChatHistory((prev) => [...prev, userMessage]);
+    updateChatHistory((prev) => [...prev, userMessage]);
     setIsProcessing(true);
     setStreamingContent("");
 
@@ -157,7 +178,7 @@ Please perform a complete, deep technical SEO audit and analysis for this websit
         timestamp: new Date().toISOString(),
       };
 
-      setChatHistory((prev) => [...prev, agentMessage]);
+      updateChatHistory((prev) => [...prev, agentMessage]);
       setStreamingContent("");
 
       const task: AgentTask = {
@@ -202,7 +223,7 @@ Please perform a complete, deep brand intelligence audit and analysis for this b
       timestamp: new Date().toISOString(),
     };
 
-    setChatHistory((prev) => [...prev, userMessage]);
+    updateChatHistory((prev) => [...prev, userMessage]);
     setIsProcessing(true);
     setStreamingContent("");
 
@@ -219,7 +240,7 @@ Please perform a complete, deep brand intelligence audit and analysis for this b
         timestamp: new Date().toISOString(),
       };
 
-      setChatHistory((prev) => [...prev, agentMessage]);
+      updateChatHistory((prev) => [...prev, agentMessage]);
       setStreamingContent("");
 
       const task: AgentTask = {
