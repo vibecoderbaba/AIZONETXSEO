@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 const platformNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/godfather", label: "Godfather AI", icon: Sparkles },
   { href: "/audit", label: "AI Audit", icon: Zap },
   { href: "/agents", label: "AI Agents", icon: Bot },
   { href: "/content", label: "Content AI", icon: FileText },
