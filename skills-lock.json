@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "dailybot": {
+      "source": "DailybotHQ/agent-skill",
+      "sourceType": "github",
+      "skillPath": "skills/dailybot/SKILL.md",
+      "computedHash": "4e2af187d5befc77cbda48a22333dda6517a434ee00fae2ac895fa7c41e2ad50"
+    }
+  }
+}

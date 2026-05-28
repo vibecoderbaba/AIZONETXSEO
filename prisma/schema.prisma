@@ -1,0 +1,118 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum Plan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum TaskStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id            String            @id @default(uuid())
+  email         String            @unique
+  name          String?
+  passwordHash  String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  
+  // Relations
+  workspaceMembers WorkspaceMember[]
+  apiKeys       ApiKey[]
+}
+
+model Workspace {
+  id            String            @id @default(uuid())
+  name          String
+  plan          Plan              @default(FREE)
+  credits       Int               @default(5)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  // Relations
+  members       WorkspaceMember[]
+  reports       Report[]
+  agentTasks    AgentTask[]
+  creditLedgers CreditLedger[]
+}
+
+model WorkspaceMember {
+  id            String            @id @default(uuid())
+  role          Role              @default(MEMBER)
+  userId        String
+  workspaceId   String
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model ApiKey {
+  id            String            @id @default(uuid())
+  name          String
+  keyHash       String            @unique
+  userId        String
+  createdAt     DateTime          @default(now())
+  expiresAt     DateTime?
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CreditLedger {
+  id            String            @id @default(uuid())
+  workspaceId   String
+  amount        Int
+  description   String
+  createdAt     DateTime          @default(now())
+
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id            String            @id @default(uuid())
+  workspaceId   String
+  name          String
+  url           String
+  type          String            // "audit" | "competitor" | "keywords"
+  size          String
+  score         Int?
+  pages         Int?
+  data          Json
+  createdAt     DateTime          @default(now())
+
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model AgentTask {
+  id            String            @id @default(uuid())
+  workspaceId   String
+  agentId       String            // "seo" | "content" | "cro" | "brand" | "sales"
+  status        TaskStatus        @default(PENDING)
+  input         String
+  output        String?           @db.Text
+  createdAt     DateTime          @default(now())
+  completedAt   DateTime?
+
+  workspace     Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}

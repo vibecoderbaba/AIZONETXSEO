@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aizonet-seo-platform
+  labels:
+    app: aizonet-seo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aizonet-seo
+  template:
+    metadata:
+      labels:
+        app: aizonet-seo
+    spec:
+      containers:
+      - name: aizonet-seo-app
+        image: gcr.io/aizonet-saas/seo-agent-platform:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1024Mi
+          requests:
+            cpu: "500m"
+            memory: 512Mi
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: aizonet-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: aizonet-secrets
+              key: redis-url
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aizonet-secrets
+              key: gemini-api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aizonet-seo-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: aizonet-seo
+---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: aizonet-seo-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: aizonet-seo-platform
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75

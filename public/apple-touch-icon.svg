@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0a0f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#151520;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22D3EE;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect x="10" y="10" width="160" height="160" rx="40" fill="url(#bg)" stroke="url(#accent)" stroke-width="4"/>
+  
+  <!-- Neural Network -->
+  <g transform="translate(90, 85)">
+    <!-- Nodes -->
+    <circle cx="-35" cy="-25" r="8" fill="url(#accent)" filter="url(#glow)"/>
+    <circle cx="0" cy="-40" r="10" fill="url(#accent)" filter="url(#glow)"/>
+    <circle cx="35" cy="-25" r="8" fill="url(#accent)" filter="url(#glow)"/>
+    <circle cx="-25" cy="25" r="8" fill="url(#accent)" filter="url(#glow)"/>
+    <circle cx="25" cy="25" r="8" fill="url(#accent)" filter="url(#glow)"/>
+    
+    <!-- Connections -->
+    <line x1="-35" y1="-25" x2="0" y2="-40" stroke="url(#accent)" stroke-width="2.5" opacity="0.6"/>
+    <line x1="0" y1="-40" x2="35" y2="-25" stroke="url(#accent)" stroke-width="2.5" opacity="0.6"/>
+    <line x1="-35" y1="-25" x2="-25" y2="25" stroke="url(#accent)" stroke-width="2.5" opacity="0.6"/>
+    <line x1="35" y1="-25" x2="25" y2="25" stroke="url(#accent)" stroke-width="2.5" opacity="0.6"/>
+    <line x1="-25" y1="25" x2="25" y2="25" stroke="url(#accent)" stroke-width="2" opacity="0.5"/>
+    <line x1="-35" y1="-25" x2="35" y2="-25" stroke="url(#accent)" stroke-width="1.5" opacity="0.4"/>
+    
+    <!-- Center A -->
+    <text x="0" y="8" font-family="system-ui, -apple-system, sans-serif" font-size="36" font-weight="900" fill="white" text-anchor="middle" filter="url(#glow)">A</text>
+  </g>
+</svg>
